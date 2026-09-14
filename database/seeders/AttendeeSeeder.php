@@ -12,6 +12,18 @@ class AttendeeSeeder extends Seeder
      */
     public function run(): void
     {
-        //
+        $users = \App\Models\User::all();
+        $events = \App\Models\Event::all();
+
+        foreach($users as $user){
+            $eventsToAttend = $events->random(rand(1, 3)); // Each user attends between 1 to 3 events
+
+            foreach($eventsToAttend as $event){
+                \App\Models\Attendee::create([
+                    'user_id' => $user->id,
+                    'event_id' => $event->id,
+                ]);
+            }
+        }
     }
 }
