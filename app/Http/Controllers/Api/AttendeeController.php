@@ -7,6 +7,7 @@ use App\Http\Resources\AttendeeResource;
 use App\Models\Attendee;
 use App\Models\Event;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class AttendeeController extends Controller
 {
@@ -50,6 +51,9 @@ class AttendeeController extends Controller
      */
     public function destroy(Event $event, Attendee $attendee)
     {
+
+    Gate::authorize('delete-attendee', [$event, $attendee]);
+    
         $attendee->delete();
 
         return response(status: 204);

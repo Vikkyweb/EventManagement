@@ -6,12 +6,19 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\EventResource;
 use App\Models\Event;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Routing\Middleware\Middleware;
 
 class EventController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+
+    public static function middleware(): array
+    {
+        return [
+            new Middleware('auth:sanctum', except: ['index', 'show']),
+        ];
+    }
+
     public function index()
     {
         $events = Event::all();
@@ -53,7 +60,6 @@ class EventController extends Controller
      */
     public function store(Request $request)
     {
- 
 
         $event = Event::create([
             ... $request->validate([
@@ -63,7 +69,7 @@ class EventController extends Controller
             'end_time' => 'required|date|after_or_equal:start_time',
             ]),
 
-            'user_id' => 1
+            'user_id' => $request->user()->id
         ]);
 
         // return response()->json([
@@ -89,6 +95,14 @@ class EventController extends Controller
      */
     public function update(Request $request, Event $event)
     {
+        // if(Gate::denies('update-event', $event)){
+        //     return response()->json([
+        //         'message' => 'You are not authorized to update this event'
+        //     ], 403);
+        // }
+
+        Gate::authorize('update-event', $event);
+
         $event->update($request->validate([
             'name' => 'sometimes|string|max:255',
             'description' => 'nullable|string',
