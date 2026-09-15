@@ -1,58 +1,390 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Event Management API
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A Laravel-based RESTful API for managing events and attendees. Built with Laravel 13, PHP 8.3+, and Laravel Sanctum for authentication.
 
-## About Laravel
+## Features
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- **Event Management**: Create, read, update, and delete events
+- **Attendee Management**: Register attendees for events and list event attendees
+- **API Authentication**: Token-based authentication using Laravel Sanctum
+- **Relationship Loading**: Flexible eager loading via `include` query parameter
+- **Email Notifications**: Automated event reminder notifications
+- **Scheduled Reminders**: Console command to send reminders for upcoming events
+- **Database Seeding**: Factories and seeders for development/testing
+- **API Resources**: Clean, consistent JSON responses
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Tech Stack
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- **Framework**: Laravel 13.x
+- **PHP**: 8.3+
+- **Authentication**: Laravel Sanctum
+- **Database**: SQLite (default), supports MySQL/PostgreSQL
+- **Testing**: PHPUnit
+- **Frontend**: Vite (for asset compilation)
 
-## Learning Laravel
+## Installation
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### Prerequisites
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- PHP 8.3 or higher
+- Composer
+- Node.js & NPM
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+### Setup
 
 ```bash
-composer require laravel/boost --dev
+# Clone the repository
+git clone <repository-url>
+cd event-manage
 
-php artisan boost:install
+# Install PHP dependencies
+composer install
+
+# Install Node dependencies
+npm install
+
+# Copy environment file
+cp .env.example .env
+
+# Generate application key
+php artisan key:generate
+
+# Run migrations
+php artisan migrate
+
+# (Optional) Seed the database
+php artisan db:seed
+
+# Build frontend assets
+npm run build
+
+# Start development server
+php artisan serve
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Or use the provided setup script:
 
-## Contributing
+```bash
+composer run setup
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Environment Configuration
 
-## Code of Conduct
+Key environment variables in `.env`:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```env
+APP_NAME="Event Management"
+APP_ENV=local
+APP_DEBUG=true
+APP_URL=http://localhost:8000
 
-## Security Vulnerabilities
+DB_CONNECTION=sqlite
+# For MySQL/PostgreSQL:
+# DB_CONNECTION=mysql
+# DB_HOST=127.0.0.1
+# DB_PORT=3306
+# DB_DATABASE=event_manage
+# DB_USERNAME=root
+# DB_PASSWORD=
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+SANCTUM_STATEFUL_DOMAINS=localhost:3000,127.0.0.1:3000
+SESSION_DOMAIN=localhost
+```
+
+## API Endpoints
+
+### Authentication
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/auth/login` | Login and receive API token |
+| POST | `/api/auth/logout` | Logout (revoke token) |
+| GET | `/api/user` | Get authenticated user |
+
+### Events
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| GET | `/api/events` | List all events (paginated) | No |
+| POST | `/api/events` | Create a new event | Yes |
+| GET | `/api/events/{id}` | Get a specific event | No |
+| PUT/PATCH | `/api/events/{id}` | Update an event | Yes |
+| DELETE | `/api/events/{id}` | Delete an event | Yes |
+
+### Attendees
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| GET | `/api/events/{event}/attendees` | List attendees for an event | No |
+| POST | `/api/events/{event}/attendees` | Register attendee for event | Yes |
+| GET | `/api/events/{event}/attendees/{id}` | Get specific attendee | No |
+| DELETE | `/api/events/{event}/attendees/{id}` | Remove attendee from event | Yes |
+
+### Query Parameters
+
+**Include Relationships** (for Events):
+```
+GET /api/events?include=user,attendees,attendees.user
+```
+
+Available relations: `user`, `attendees`, `attendees.user`
+
+**Pagination**:
+```
+GET /api/events?page=2&per_page=15
+```
+
+## Authentication
+
+### Login
+
+```bash
+curl -X POST http://localhost:8000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "user@example.com", "password": "password"}'
+```
+
+Response:
+```json
+{
+  "token": "1|abc123..."
+}
+```
+
+### Using the Token
+
+Include the token in the Authorization header:
+
+```bash
+curl -X GET http://localhost:8000/api/events \
+  -H "Authorization: Bearer 1|abc123..." \
+  -H "Accept: application/json"
+```
+
+## Data Models
+
+### Event
+
+| Field | Type | Description |
+|-------|------|-------------|
+| id | integer | Primary key |
+| user_id | integer | Foreign key to User |
+| name | string | Event name (max 255) |
+| description | text | Event description |
+| start_time | datetime | Event start time |
+| end_time | datetime | Event end time |
+| created_at | timestamp | Creation timestamp |
+| updated_at | timestamp | Last update timestamp |
+
+**Relationships**: `user` (belongsTo), `attendees` (hasMany)
+
+### Attendee
+
+| Field | Type | Description |
+|-------|------|-------------|
+| id | integer | Primary key |
+| user_id | integer | Foreign key to User |
+| event_id | integer | Foreign key to Event |
+| created_at | timestamp | Creation timestamp |
+| updated_at | timestamp | Last update timestamp |
+
+**Relationships**: `user` (belongsTo), `event` (belongsTo)
+
+### User
+
+| Field | Type | Description |
+|-------|------|-------------|
+| id | integer | Primary key |
+| name | string | User name |
+| email | string | Unique email |
+| password | string | Hashed password |
+| email_verified_at | timestamp | Email verification timestamp |
+
+## Authorization Policies
+
+The application includes policies for Events and Attendees (`EventPolicy`, `AttendeePolicy`). Currently all methods return `false` - implement your authorization logic:
+
+```php
+// app/Policies/EventPolicy.php
+public function update(User $user, Event $event): bool
+{
+    return $user->id === $event->user_id; // Only creator can update
+}
+
+public function delete(User $user, Event $event): bool
+{
+    return $user->id === $event->user_id; // Only creator can delete
+}
+```
+
+Register policies in `app/Providers/AuthServiceProvider.php`:
+
+```php
+protected $policies = [
+    Event::class => EventPolicy::class,
+    Attendee::class => AttendeePolicy::class,
+];
+```
+
+## Event Reminders
+
+### Notification
+
+The `EventReminderNotification` sends email reminders to attendees for events starting within 24 hours.
+
+### Console Command
+
+Send reminders manually:
+
+```bash
+php artisan app:send-event-reminders
+```
+
+Schedule in `app/Console/Kernel.php`:
+
+```php
+protected function schedule(Schedule $schedule): void
+{
+    $schedule->command('app:send-event-reminders')->dailyAt('09:00');
+}
+```
+
+## Database Seeding
+
+Seed the database with sample data:
+
+```bash
+# Full seed (1000 users, 200 events, attendees)
+php artisan db:seed
+
+# Or run specific seeders
+php artisan db:seed --class=EventSeeder
+php artisan db:seed --class=AttendeeSeeder
+```
+
+## Testing
+
+```bash
+# Run all tests
+php artisan test
+
+# Run with coverage
+php artisan test --coverage
+
+# Run specific test file
+php artisan test tests/Feature/ExampleTest.php
+```
+
+## Development
+
+### Code Style
+
+```bash
+# Format code with Laravel Pint
+./vendor/bin/pint
+
+# Check code style
+./vendor/bin/pint --test
+```
+
+### Logs
+
+```bash
+# View Laravel logs
+php artisan pail
+
+# Or tail directly
+tail -f storage/logs/laravel.log
+```
+
+### Database
+
+```bash
+# Run migrations
+php artisan migrate
+
+# Rollback last migration
+php artisan migrate:rollback
+
+# Fresh migrate and seed
+php artisan migrate:fresh --seed
+```
+
+## Project Structure
+
+```
+app/
+├── Console/Commands/SendEventReminders.php  # Reminder command
+├── Http/
+│   ├── Controllers/Api/
+│   │   ├── AuthController.php              # Login/logout
+│   │   ├── EventController.php             # Event CRUD
+│   │   └── AttendeeController.php          # Attendee CRUD
+│   ├── Resources/
+│   │   ├── EventResource.php               # Event API resource
+│   │   ├── AttendeeResource.php            # Attendee API resource
+│   │   └── UserResource.php                # User API resource
+│   └── Traits/CanLoadRelationships.php     # Relationship loading trait
+├── Models/
+│   ├── Event.php
+│   ├── Attendee.php
+│   └── User.php
+├── Notifications/EventReminderNotification.php
+└── Policies/
+    ├── EventPolicy.php
+    └── AttendeePolicy.php
+
+database/
+├── factories/                              # Model factories
+├── migrations/                             # Database migrations
+└── seeders/                                # Database seeders
+
+routes/
+├── api.php                                 # API routes
+└── web.php                                 # Web routes
+```
+
+## API Response Format
+
+### Success Response
+
+```json
+{
+  "id": 1,
+  "name": "Laravel Conference",
+  "user_id": 1,
+  "description": "Annual Laravel conference",
+  "start_time": "2026-10-15T09:00:00.000000Z",
+  "end_time": "2026-10-15T18:00:00.000000Z",
+  "created_at": "2026-09-15T10:00:00.000000Z",
+  "updated_at": "2026-09-15T10:00:00.000000Z",
+  "user": {
+    "id": 1,
+    "name": "John Doe",
+    "email": "john@example.com"
+  },
+  "attendees": [
+    {
+      "id": 1,
+      "user_id": 2,
+      "event_id": 1,
+      "event": {...}
+    }
+  ]
+}
+```
+
+### Error Response
+
+```json
+{
+  "message": "The provided credentials are incorrect.",
+  "errors": {
+    "email": ["The provided credentials are incorrect."]
+  }
+}
+```
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+This project is open-sourced software licensed under the [MIT license](LICENSE.md).
